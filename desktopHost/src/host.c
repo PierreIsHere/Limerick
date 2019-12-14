@@ -39,7 +39,7 @@ int main(int argc , char *argv[])
     //Listen
     listen(socket_desc , 3);
      
-    //Accept and incoming connection
+    // //Accept and incoming connection
     puts("Waiting for incoming connections...");
     c = sizeof(struct sockaddr_in);
      
@@ -60,7 +60,7 @@ int main(int argc , char *argv[])
         }
          
         //Now join the thread , so that we dont terminate before the thread
-        //pthread_join( thread_id , NULL);
+        // pthread_join( thread_id , NULL);
         puts("Handler assigned");
     }
      
@@ -80,10 +80,12 @@ void *connection_handler(void *socket_desc)
     char *message , client_message[2000];
      
     message = "Test Message\n";
-    write(sock , message , strlen(message));
-    if(login(sock)){
+    send(sock , message , strlen(message),0);
+    // if(login(sock)){
+        // printf("Testsetsetset");
         while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
         {
+            printf("%s",client_message);
             //end of string marker
             client_message[read_size] = '\0';
             
@@ -100,9 +102,9 @@ void *connection_handler(void *socket_desc)
         {
             perror("recv failed");
         }
-    }else{
-        fflush(stdout);
-        exit(0);
-    }
+    // }else{
+    //     fflush(stdout);
+    //     exit(0);
+    // }
     return 0;
 } 
