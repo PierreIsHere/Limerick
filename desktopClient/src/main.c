@@ -5,56 +5,62 @@
 #include <string.h>
 #include <pthread.h>
 #include <gtk/gtk.h>
-
-
 #define PORT 8888 
+
 void *input();
 void *output();
-void on_window_main_destroy();
 int connect();
 int sock =0;
+const gchar *ipAddr;
 
+GtkWidget *ipAddrBox;
+GtkWidget *ipPop;
+GtkBuilder *builder;
+GtkWidget *window;
 
-
-GtkWidget *g_lbl_hello;
-GtkWidget *g_lbl_count;
-void on_btn_hello_clicked();
 int main(int argc, char *argv[])
 {
-    GtkBuilder      *builder; 
-    GtkWidget       *window;
-
     gtk_init(&argc, &argv);
 
     builder = gtk_builder_new();
     gtk_builder_add_from_file (builder, "share/templates/login.glade", NULL);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "loginWindow"));
-    gtk_builder_connect_signals(builder, NULL);
-    
-    // get pointers to the two labels
-    g_lbl_hello = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_hello"));
-    g_lbl_count = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_count"));
+    ipPop = GTK_WIDGET(gtk_builder_get_object (builder, "ipPop"));
+    ipAddrBox = GTK_WIDGET(gtk_builder_get_object(builder, "ipAddr"));
 
+    gtk_builder_connect_signals(builder, NULL);    
     g_object_unref(builder);
-
     gtk_widget_show(window);                
     gtk_main();
 
     return 0;
 }
 
-void on_btn_hello_clicked()
-{
-    static unsigned int count = 0;
-    char str_count[30] = {0};
+void submitServer(){
+    ipAddr= gtk_entry_get_text(ipAddrBox);
+    g_print(ipAddr);
+    // if(connect()){
+    //     //go to next page 
+    // }else{
+    //     //Dialog Box
+    // }
+    gtk_dialog_run(GTK_DIALOG(ipPop));
     
-    gtk_label_set_text(GTK_LABEL(g_lbl_hello), "Hello, world!");
-    count++;
-    sprintf(str_count, "%d", count);
-    gtk_label_set_text(GTK_LABEL(g_lbl_count), str_count);
 }
 
+void on_loginWindow_destroy()
+{
+    puts("Program Terminated");
+    gtk_main_quit();
+}
+
+void destroyIpPop(){
+    gtk_widget_hide(GTK_WIDGET(ipPop));
+    ipPop = GTK_WIDGET(gtk_builder_get_object (builder, "ipPop"));
+    puts("Closed Popup");
+}
+// Socket Code Below
 // int connect(){ 
 //     struct sockaddr_in serv_addr; 
 //     pthread_t inThread,outThread; 
@@ -68,7 +74,7 @@ void on_btn_hello_clicked()
 //     serv_addr.sin_family = AF_INET; 
 //     serv_addr.sin_port = htons(PORT); 
        
-//     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)  
+//     if(inet_pton(AF_INET,ipAddr, &serv_addr.sin_addr)<=0)  
 //     { 
 //         printf("\nInvalid address/ Address not supported \n"); 
 //         return -1; 
@@ -102,14 +108,3 @@ void on_btn_hello_clicked()
 //         }
 //     }
 // }
-
-void on_loginWindow_main_destroy()
-{
-    puts("Program teminating");
-    gtk_main_quit();
-}
-
-void click()
-{
-    puts("Button Clicked");
-}
