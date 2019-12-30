@@ -1,110 +1,59 @@
-#include <stdio.h> 
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#include <unistd.h> 
-#include <string.h>
-#include <pthread.h>
 #include <gtk/gtk.h>
-#define PORT 8888 
 
-void *input();
-void *output();
-int connect();
-int sock =0;
+
+void login();
+void submitServer();
+void on_window_destroy();
 const gchar *ipAddr;
 
-GtkWidget *ipAddrBox;
-GtkWidget *ipPop;
-GtkBuilder *builder;
-GtkWidget *window;
+typedef struct limerickGUI{
+    GtkWidget *mainWindow,*mainStack;
+    GtkWidget *serverPage,*ipAddrBox,*submitServer;
+    GtkWidget *loginPage,*userName, *userPass;
+}   limerickGUI;
 
 int main(int argc, char *argv[])
 {
+    GtkBuilder *builder;
+    limerickGUI mainProg;
     gtk_init(&argc, &argv);
 
     builder = gtk_builder_new();
-    gtk_builder_add_from_file (builder, "share/templates/login.glade", NULL);
+    gtk_builder_add_from_file (builder, "share/templates/logintest.glade", NULL);
 
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "loginWindow"));
-    ipPop = GTK_WIDGET(gtk_builder_get_object (builder, "ipPop"));
-    ipAddrBox = GTK_WIDGET(gtk_builder_get_object(builder, "ipAddr"));
+    mainProg.mainWindow = GTK_WIDGET(gtk_builder_get_object(builder, "mainWindow"));
+    mainProg.mainStack = GTK_WIDGET(gtk_builder_get_object(builder, "mainStack"));
 
-    gtk_builder_connect_signals(builder, NULL);    
+    mainProg.serverPage = GTK_WIDGET(gtk_builder_get_object(builder, "serverPage"));    
+    mainProg.ipAddrBox = GTK_WIDGET(gtk_builder_get_object(builder, "ipAddr"));
+    mainProg.submitServer = GTK_WIDGET(gtk_builder_get_object(builder, "submitServer"));
+
+    mainProg.loginPage = GTK_WIDGET(gtk_builder_get_object(builder, "loginPage"));
+
+    g_signal_connect(mainProg.submitServer, "clicked", G_CALLBACK(submitServer), &mainProg);
+    gtk_builder_connect_signals(builder, NULL);
+
     g_object_unref(builder);
-    gtk_widget_show(window);                
+
+    gtk_widget_show(mainProg.mainWindow);                
     gtk_main();
 
     return 0;
 }
-
-void submitServer(){
-    ipAddr= gtk_entry_get_text(ipAddrBox);
+void submitServer(GtkWidget *widget, limerickGUI *mainProg){
+    ipAddr= gtk_entry_get_text(mainProg->ipAddrBox);
     g_print(ipAddr);
-    // if(connect()){
-    //     //go to next page 
-    // }else{
-    //     //Dialog Box
-    // }
-    gtk_dialog_run(GTK_DIALOG(ipPop));
-    
+    gtk_stack_set_visible_child (GTK_STACK(mainProg->mainStack), mainProg->loginPage);
 }
 
-void on_loginWindow_destroy()
-{
+// void login(){
+//     const gchar *uName,*uPass;
+//     uName = gtk_entry_get_text(mainProg.userName);
+//     uPass = gtk_entry_get_text(mainProg.userPass);
+// }
+
+void on_window_destroy(){
     puts("Program Terminated");
     gtk_main_quit();
 }
 
-void destroyIpPop(){
-    gtk_widget_hide(GTK_WIDGET(ipPop));
-    ipPop = GTK_WIDGET(gtk_builder_get_object (builder, "ipPop"));
-    puts("Closed Popup");
-}
-// Socket Code Below
-// int connect(){ 
-//     struct sockaddr_in serv_addr; 
-//     pthread_t inThread,outThread; 
-    
-//     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-//     { 
-//         printf("\n Socket creation error \n"); 
-//         return -1; 
-//     } 
-   
-//     serv_addr.sin_family = AF_INET; 
-//     serv_addr.sin_port = htons(PORT); 
-       
-//     if(inet_pton(AF_INET,ipAddr, &serv_addr.sin_addr)<=0)  
-//     { 
-//         printf("\nInvalid address/ Address not supported \n"); 
-//         return -1; 
-//     } 
-   
-//     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-//     { 
-//         printf("\nConnection Failed \n"); 
-//         return -1; 
-//     }
-//     pthread_create(&inThread, NULL, input,0); 
-//     pthread_join(inThread, NULL);
-//     pthread_create(&outThread, NULL, output,0); 
-//     pthread_join(outThread, NULL); 
-//     return 1; 
-// }
-
-// void *input(){
-//     char inp[200];
-//     for(;;){
-//     scanf("%s",inp);
-//     printf("%d\n",send((long)sock , inp , strlen(inp),0));
-//     }
-    
-// }
-// void *output(){
-//     char buffer[1024];
-//     for(;;){
-//         if(read((long)sock,buffer,1024)>0){
-//             printf("%s",buffer);
-//         }
-//     }
-// }
