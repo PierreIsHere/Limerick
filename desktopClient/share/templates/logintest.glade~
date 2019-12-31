@@ -7,6 +7,7 @@
     <property name="title" translatable="yes">Limerick Client</property>
     <property name="default_width">640</property>
     <property name="default_height">360</property>
+    <signal name="destroy" handler="on_window_destroy" swapped="no"/>
     <child>
       <placeholder/>
     </child>
@@ -54,7 +55,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="enterServer">
+              <object class="GtkButton" id="submitServer">
                 <property name="label" translatable="yes">Submit</property>
                 <property name="width_request">100</property>
                 <property name="height_request">34</property>
