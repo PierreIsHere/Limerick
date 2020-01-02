@@ -1,0 +1,12 @@
+.serverToggle {
+    color: rgb(18, 195, 41);
+    border: 1px solid;
+    border-color: rgb(18, 195, 41);
+    background: white;
+
+}
+.serverToggle:checked{
+    background: white;
+    color: rgb(197, 41, 41);
+    border-color: rgb(197, 41, 41);
+}

@@ -19,6 +19,7 @@
           <object class="GtkBox" id="mainPage">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="orientation">vertical</property>
             <child>
@@ -26,6 +27,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <property name="label" translatable="yes">Limerick Host</property>
               </object>
@@ -40,13 +44,21 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <child>
                   <object class="GtkLabel" id="lblAddress">
+                    <property name="width_request">52</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">IP Address: </property>
+                    <property name="margin_right">4</property>
+                    <property name="label" translatable="yes">Address:</property>
+                    <property name="justify">center</property>
+                    <attributes>
+                      <attribute name="size" value="10000"/>
+                    </attributes>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -58,8 +70,9 @@
                   <object class="GtkEntry" id="ipAddrEntry">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_left">4</property>
                     <property name="editable">False</property>
-                    <property name="width_chars">0</property>
+                    <property name="width_chars">10</property>
                     <property name="caps_lock_warning">False</property>
                   </object>
                   <packing>
@@ -80,12 +93,15 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
                 <property name="margin_bottom">5</property>
                 <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_right">4</property>
                     <property name="label" translatable="yes">Port: </property>
                   </object>
                   <packing>
@@ -101,12 +117,13 @@
                     <property name="visible">True</property>
                     <property name="sensitive">False</property>
                     <property name="can_focus">True</property>
+                    <property name="margin_left">4</property>
+                    <property name="margin_right">4</property>
                     <property name="max_length">5</property>
                     <property name="width_chars">5</property>
                     <property name="max_width_chars">5</property>
                     <property name="text" translatable="yes">8888</property>
                     <property name="caps_lock_warning">False</property>
-                    <property name="input_purpose">number</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -116,10 +133,11 @@
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="portEditToggle">
-                    <property name="label" translatable="yes">edit</property>
+                    <property name="label" translatable="yes">Edit</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="margin_left">4</property>
                     <property name="draw_indicator">True</property>
                     <signal name="toggled" handler="portEditToggled" swapped="no"/>
                   </object>
@@ -137,18 +155,25 @@
               </packing>
             </child>
             <child>
-              <object class="GtkToggleButton">
+              <object class="GtkToggleButton" id="serverToggleBtn">
+                <property name="width_request">168</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <signal name="toggled" handler="toggleServer" swapped="no"/>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkLabel" id="lblServerToggle">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">Start Server</property>
                   </object>
                 </child>
+                <style>
+                  <class name="serverToggle"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -161,14 +186,18 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
                 <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
                 <child>
                   <object class="GtkButton">
                     <property name="label" translatable="yes">Logs</property>
+                    <property name="width_request">80</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="margin_right">2</property>
+                    <property name="margin_right">4</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -182,7 +211,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="margin_left">2</property>
+                    <property name="margin_left">4</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -202,9 +231,6 @@
             <property name="name">page0</property>
             <property name="title" translatable="yes">page0</property>
           </packing>
-        </child>
-        <child>
-          <placeholder/>
         </child>
       </object>
     </child>
