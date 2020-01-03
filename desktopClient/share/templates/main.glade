@@ -30,7 +30,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
                 <property name="margin_bottom">5</property>
-                <property name="label" translatable="yes">Enter Server Adress</property>
+                <property name="label" translatable="yes">Enter Server Details</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -39,19 +39,53 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="ipAddr">
-                <property name="width_request">168</property>
-                <property name="height_request">34</property>
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
                 <property name="halign">center</property>
-                <property name="margin_top">5</property>
-                <property name="margin_bottom">5</property>
+                <child>
+                  <object class="GtkEntry" id="ipAddr">
+                    <property name="width_request">168</property>
+                    <property name="height_request">34</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="halign">center</property>
+                    <property name="margin_right">2</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="placeholder_text" translatable="yes">Address</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="portNum">
+                    <property name="height_request">34</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="margin_left">2</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="max_length">5</property>
+                    <property name="width_chars">5</property>
+                    <property name="max_width_chars">5</property>
+                    <property name="placeholder_text" translatable="yes">Port</property>
+                    <property name="input_purpose">number</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">2</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>

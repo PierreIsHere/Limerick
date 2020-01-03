@@ -5,14 +5,15 @@ Purpose: Desktop host for the limerick ftp/server program
 */
 #include"libs.h"
 
-int clientLimit;
-const char *ipAddr, *port;
+int clientLimit, port;
+const char *ipAddr;
 GtkWidget *mainWindow,*mainStack;
 GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry;
 GtkWidget *toggleServerBtn,*lblServerToggle;
 
 void * clientThread(void *arg)
 {
+    int clientSocket = *((int *)arg);
     /*
     *should be receiving inputs from the client
     *for data calls from database 
@@ -43,8 +44,7 @@ void portEditToggled(){
     }
 }
 
-
-void connect(GtkToggleButton *toggleBtn){
+void toggleServer(GtkToggleButton *toggleBtn){
     gboolean state;
     int serverSocket, clientSocket;
     struct sockaddr_in serverAddr;
@@ -52,7 +52,7 @@ void connect(GtkToggleButton *toggleBtn){
     socklen_t addr_size;
     if(state){
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Stop Server");
-        
+        printf("asdssssssssss");
         //Creating the host socket 
         serverSocket = socket(PF_INET, SOCK_STREAM, 0);
         
@@ -72,8 +72,7 @@ void connect(GtkToggleButton *toggleBtn){
             printf("Listening\n");
         }else{
             /*
-            *Implement a popup indicating the user that there is an error
-            *set the state to 0
+            *Implement a popup indicating the user that there is a connection error
             */
             printf("Error\n");
         }

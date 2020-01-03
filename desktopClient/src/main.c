@@ -3,22 +3,77 @@ Author: Azfar C.
 FileName: main.c
 Purpose: Desktop client for the limerick ftp/server program
 */
+#include <stdio.h> 
+#include <sys/socket.h> 
+#include <arpa/inet.h> 
+#include <unistd.h> 
+#include <string.h>
+#include <pthread.h>
 #include <gtk/gtk.h>
 
 
-const gchar *ipAddr;
+const gchar *ipAddr,*portN;
+int port, sock=0;
 
 GtkWidget *mainWindow,*mainStack;
-GtkWidget *serverPage,*ipAddrBox;
+GtkWidget *serverPage,*ipAddrBox,*portNum;
 GtkWidget *loginPage,*userName,*userPass;
 GtkWidget *signupPage;
 GtkWidget *passRecovPage;
 
-
+void *input(){
+    char inp[200];
+    for(;;){
+    scanf("%s",inp);
+    send((long)sock , inp , strlen(inp),0);
+    }
+    pthread_exit(NULL);
+}
+void *output(){
+    char buffer[1024];
+    for(;;){
+        if(read((long)sock,buffer,1024)>0){
+            printf("Received - %s\n",buffer);
+        }
+    }
+    pthread_exit(NULL);
+}
 void submitServer(){
+    portN = gtk_entry_get_text(portNum);
+    port = atoi(portN);
     ipAddr= gtk_entry_get_text(ipAddrBox);
     g_print(ipAddr);
+    g_print(port);
+
+    /***************************************/
+    struct sockaddr_in serv_addr; 
+    pthread_t inThread,outThread; 
+    
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    { 
+        printf("\n Socket creation error \n"); 
+        return -1; 
+    } 
+   
+    serv_addr.sin_family = AF_INET; 
+    serv_addr.sin_port = htons(port); 
+       
+    if(inet_pton(AF_INET,ipAddr, &serv_addr.sin_addr)<=0)  
+    { 
+        printf("\nInvalid address/ Address not supported \n"); 
+        return -1; 
+    } 
+   
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    { 
+        printf("\nConnection Failed \n"); 
+        return -1; 
+    }
+    pthread_create(&inThread, NULL, input,0); 
+    pthread_create(&outThread, NULL, output,0); 
+    /****************************************/
     gtk_stack_set_visible_child (GTK_STACK(mainStack),loginPage);
+    
 }
 void login(){
     const gchar *uName,*uPass;
@@ -53,6 +108,7 @@ int main(int argc, char *argv[])
 
     serverPage = GTK_WIDGET(gtk_builder_get_object(builder, "serverPage"));    
     ipAddrBox = GTK_WIDGET(gtk_builder_get_object(builder, "ipAddr"));
+    portNum = GTK_WIDGET(gtk_builder_get_object(builder, "portNum"));
 
     loginPage = GTK_WIDGET(gtk_builder_get_object(builder, "loginPage"));
 
