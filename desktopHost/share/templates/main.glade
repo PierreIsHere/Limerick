@@ -198,6 +198,9 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="margin_right">4</property>
+                    <style>
+                      <class name="button"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -212,6 +215,9 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="margin_left">4</property>
+                    <style>
+                      <class name="button"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>

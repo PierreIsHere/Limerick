@@ -3,23 +3,23 @@ Author: Azfar C.
 FileName: main.c
 Purpose: Desktop host for the limerick ftp/server program
 */
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
+#include"libs.h"
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <arpa/inet.h>
-
-#include <gtk/gtk.h>
-
-const char *ipAddr;
+int clientLimit;
+const char *ipAddr, *port;
 GtkWidget *mainWindow,*mainStack;
 GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry;
 GtkWidget *toggleServerBtn,*lblServerToggle;
+
+void * clientThread(void *arg)
+{
+    /*
+    *should be receiving inputs from the client
+    *for data calls from database 
+    */
+    close(clientSocket);
+    pthread_exit(NULL);
+}
 
 char* getIpAddr() 
 { 
@@ -43,13 +43,71 @@ void portEditToggled(){
     }
 }
 
-void toggleServer(GtkToggleButton *toggleBtn){
+
+void connect(GtkToggleButton *toggleBtn){
     gboolean state;
-    state = gtk_toggle_button_get_active(toggleBtn);
+    int serverSocket, clientSocket;
+    struct sockaddr_in serverAddr;
+    struct sockaddr_storage serverStorage;
+    socklen_t addr_size;
     if(state){
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Stop Server");
+        
+        //Creating the host socket 
+        serverSocket = socket(PF_INET, SOCK_STREAM, 0);
+        
+        // Configuring family, port and address
+        serverAddr.sin_family = AF_INET;
+        serverAddr.sin_port = htons(port);
+        serverAddr.sin_addr.s_addr = inet_addr(ipAddr);
+        
+        //Convention of padding the socket structure
+        memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+        
+        //Combining socket with supplied information
+        bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+
+        //Setting the socket to listen with a clientLimit amount of connections qeued 
+        if(listen(serverSocket,clientLimit)==0){
+            printf("Listening\n");
+        }else{
+            /*
+            *Implement a popup indicating the user that there is an error
+            *set the state to 0
+            */
+            printf("Error\n");
+        }
+        /*
+        *Need to implement a client handler to take care of incoming clients 
+        *while user continues to use application
+        */
+
+        //Instantiating an array of thread identifiers
+        pthread_t threadID[clientLimit];
+        int i = 0;
+        for(;;){
+
+            //Accept call creates a new socket for the incoming connection
+            addr_size = sizeof serverStorage;
+            clientSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
+
+            //for each client request creates a thread and assign the client request to it to process
+            //so the main thread can entertain next request
+            if( pthread_create(&threadID[i], NULL, clientThread, &clientSocket) != 0 )
+                printf("Failed to create thread\n");
+            if( i >= clientLimit)
+            {
+                i = 0;
+                while(i < clientLimit)
+                {
+                pthread_join(threadID[i++],NULL);
+                }
+                i = 0;
+            }
+        }
     }else{
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Start Server");
+        //disconnect
     }
 }
 
@@ -92,14 +150,14 @@ int main(int argc, char *argv[])
     toggleServerBtn = GTK_WIDGET(gtk_builder_get_object(builder, "toggleServerBtn"));
     lblServerToggle = GTK_WIDGET(gtk_builder_get_object(builder, "lblServerToggle"));
 
-    //Loading signals (user actions) from glade file
+    //Loading signals (user actions/function routing) from glade file
     gtk_builder_connect_signals(builder, NULL);
 
     g_object_unref(builder);
+
     //Starting the gui
     gtk_widget_show(mainWindow);                
     gtk_main();
-
     return 0;
 }
 

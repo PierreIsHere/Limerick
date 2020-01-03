@@ -1,4 +1,4 @@
-#ifndef ACCOUNT_H_
-#define ACCOUT_H_
+#ifndef ACCOUNT_H
+#define ACCOUT_H
 int login(int sock);
 #endif

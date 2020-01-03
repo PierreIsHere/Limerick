@@ -226,9 +226,6 @@
                 <property name="position">4</property>
               </packing>
             </child>
-            <style>
-              <class name="serverToggle"/>
-            </style>
           </object>
           <packing>
             <property name="name">page0</property>
