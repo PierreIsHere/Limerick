@@ -1,110 +1,57 @@
-/*
-    Compile
-    gcc server.c -lpthread -o server
-*/
- 
-#include "libs.h"
-#include "account.h"
- 
-//the thread function
-void *connection_handler(void *);
- 
-int main(int argc , char *argv[])
-{
-    int socket_desc , client_sock , c;
-    struct sockaddr_in server , client;
-    
-    //Create socket
-    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
-    if (socket_desc == -1)
-    {
-        printf("Could not create socket");
-    }
-    puts("Socket created");
-     
-    //Prepare the sockaddr_in structure
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8888 );
-     
-    //Bind
-    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
-    {
-        //print the error message
-        perror("bind failed. Error");
-        return 1;
-    }
-    puts("bind done");
-     
-    //Listen
-    listen(socket_desc , 3);
-     
-    // //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    c = sizeof(struct sockaddr_in);
-     
-     
-    //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    c = sizeof(struct sockaddr_in);
-	pthread_t thread_id;
-	
-    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
-    {
-        puts("Connection accepted");
-         
-        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
-        {
-            perror("could not create thread");
-            return 1;
-        }
-         
-        //Now join the thread , so that we dont terminate before the thread
-        // pthread_join( thread_id , NULL);
-        puts("Handler assigned");
-    }
-     
-    if (client_sock < 0)
-    {
-        perror("accept failed");
-        return 1;
-    }
-     
-    return 0;
-}
+#include"libs.h"
 
-void *connection_handler(void *socket_desc)
+int clientLimit;
+
+void * clientThread(void *arg)
 {
-    int sock = *(int*)socket_desc;
-    int read_size;
-    char *message , client_message[2000];
-     
-    message = "Test Message\n";
-    send(sock , message , strlen(message),0);
-    // if(login(sock)){
-        // printf("Testsetsetset");
-        while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    char client_message[2000];
+    int clientSocket = *((int *)arg);
+    recv(clientSocket , client_message , 2000 , 0);
+    printf("Received - %s - %d",client_message,clientSocket);
+    send(clientSocket,"Test",6,0);
+    printf("Exit socketThread \n");
+    close(clientSocket);
+    pthread_exit(NULL);
+}
+int connect(){
+    int serverSocket, clientSocket;
+    struct sockaddr_in serverAddr;
+    struct sockaddr_storage serverStorage;
+    socklen_t addr_size;
+    //Creating the host socket 
+    serverSocket = socket(PF_INET, SOCK_STREAM, 0);
+    // Configuring family, port and address
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(7799);
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //Convention of padding the socket structure
+    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+    //Combining socket with supplied information
+    bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+
+    //Setting the socket to listen with a clientLimit amount of connections qeued 
+    if(listen(serverSocket,clientLimit)==0)printf("Listening\n");
+    else printf("Error\n");
+    //Instantiating an array of thread identifiers
+    pthread_t threadID[clientLimit];
+    int i = 0;
+    for(;;){
+        //Accept call creates a new socket for the incoming connection
+        addr_size = sizeof serverStorage;
+        clientSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
+        //for each client request creates a thread and assign the client request to it to process
+        //so the main thread can entertain next request
+        if( pthread_create(&threadID[i], NULL, clientThread, &clientSocket) != 0 )
+            printf("Failed to create thread\n");
+        if( i >= clientLimit)
         {
-            printf("%s",client_message);
-            //end of string marker
-            client_message[read_size] = '\0';
-            
-            write(sock , client_message , strlen(client_message));		
-            memset(client_message, 0, 2000);
+            i = 0;
+            while(i < clientLimit)
+            {
+            pthread_join(threadID[i++],NULL);
+            }
+            i = 0;
         }
-        
-        if(read_size == 0)
-        {
-            puts("Client disconnected");
-            fflush(stdout);
-        }
-        else if(read_size == -1)
-        {
-            perror("recv failed");
-        }
-    // }else{
-    //     fflush(stdout);
-    //     exit(0);
-    // }
-    return 0;
-} 
+    }
+  return 1;
+}
