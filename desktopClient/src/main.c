@@ -23,13 +23,14 @@ GtkWidget *passRecovPage;
 
 void *input(){
     char inp[200];
-    for(;;){
-    scanf("%s",inp);
-    send((long)sock , inp , strlen(inp),0);
-    }
+    // for(;;){
+    // scanf("%s",inp);
+    send((long)sock , "This is a message from a socket" , 34,0);
+    // }
     pthread_exit(NULL);
 }
 void *output(){
+    printf("Receiving Output\n");
     char buffer[1024];
     for(;;){
         if(read((long)sock,buffer,1024)>0){
@@ -38,21 +39,32 @@ void *output(){
     }
     pthread_exit(NULL);
 }
-void submitServer(){
+
+void msgBox(char*header,char*message) {
+    
+  GtkWidget *dialog;
+  dialog = gtk_message_dialog_new(GTK_WINDOW(mainWindow), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,message);
+  gtk_window_set_title(GTK_WINDOW(dialog),header);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(dialog);
+}
+
+int submitServer(){
     portN = gtk_entry_get_text(portNum);
     port = atoi(portN);
     ipAddr= gtk_entry_get_text(ipAddrBox);
     g_print(ipAddr);
-    g_print(port);
+    printf(":%d\n",port);
 
-    /***************************************/
+    /***********Socket Code*********************/
     struct sockaddr_in serv_addr; 
     pthread_t inThread,outThread; 
     
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
         printf("\n Socket creation error \n"); 
-        return -1; 
+        msgBox("Error","Connection Error");
+        return -1;
     } 
    
     serv_addr.sin_family = AF_INET; 
@@ -60,15 +72,18 @@ void submitServer(){
        
     if(inet_pton(AF_INET,ipAddr, &serv_addr.sin_addr)<=0)  
     { 
-        printf("\nInvalid address/ Address not supported \n"); 
-        return -1; 
+        printf("\nInvalid address/ Address not supported \n");
+        msgBox("Error","Invalid/ Unsupported Address");
+        return -1;
     } 
    
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
     { 
-        printf("\nConnection Failed \n"); 
-        return -1; 
+        printf("\nConnection Failed \n");
+        msgBox("Error","Connection Failure");
+        return -1;
     }
+    printf("%d\n",socket);
     pthread_create(&inThread, NULL, input,0); 
     pthread_create(&outThread, NULL, output,0); 
     /****************************************/

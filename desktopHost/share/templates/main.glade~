@@ -155,6 +155,47 @@
               </packing>
             </child>
             <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_top">5</property>
+                <property name="margin_bottom">5</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_right">2</property>
+                    <property name="label" translatable="yes">Maximum Clients:</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="clientLimitEntry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="max_length">2</property>
+                    <property name="width_chars">2</property>
+                    <property name="max_width_chars">2</property>
+                    <property name="input_purpose">number</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkToggleButton" id="serverToggleBtn">
                 <property name="width_request">168</property>
                 <property name="visible">True</property>
@@ -163,6 +204,7 @@
                 <property name="halign">center</property>
                 <property name="margin_left">5</property>
                 <property name="margin_right">5</property>
+                <property name="margin_top">5</property>
                 <signal name="toggled" handler="toggleServer" swapped="no"/>
                 <child>
                   <object class="GtkLabel" id="lblServerToggle">
@@ -178,7 +220,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">3</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -198,6 +240,9 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="margin_right">4</property>
+                    <style>
+                      <class name="button"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -212,6 +257,9 @@
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="margin_left">4</property>
+                    <style>
+                      <class name="button"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -223,7 +271,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">4</property>
+                <property name="position">5</property>
               </packing>
             </child>
           </object>

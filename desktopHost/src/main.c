@@ -7,23 +7,17 @@ Purpose: Desktop host for the limerick ftp/server program
 
 int clientLimit, port;
 const char *ipAddr;
+
+int serverSocket;
+struct sockaddr_in serverAddr;
+struct sockaddr_storage serverStorage;
+socklen_t addr_size;
+
 GtkWidget *mainWindow,*mainStack;
-GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry;
+GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry,*clientLimitEntry;
 GtkWidget *toggleServerBtn,*lblServerToggle;
 
-void * clientThread(void *arg)
-{
-    int clientSocket = *((int *)arg);
-    /*
-    *should be receiving inputs from the client
-    *for data calls from database 
-    */
-    close(clientSocket);
-    pthread_exit(NULL);
-}
-
-char* getIpAddr() 
-{ 
+char* getIpAddr() { 
     int fd;
     struct ifreq ifr;
     fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -32,7 +26,16 @@ char* getIpAddr()
     ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
     return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
-} 
+}
+
+void msgBox(char*header,char*message) {
+    
+  GtkWidget *dialog;
+  dialog = gtk_message_dialog_new(GTK_WINDOW(mainWindow), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,message);
+  gtk_window_set_title(GTK_WINDOW(dialog),header);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(dialog);
+}
 
 void portEditToggled(){
     gboolean state;
@@ -44,15 +47,62 @@ void portEditToggled(){
     }
 }
 
+void * clientThread(void *arg)
+{
+    int clientSocket = *((int *)arg);
+    char client_message[2000];
+    recv(clientSocket , client_message , 2000 , 0);
+    printf("Connected to - %d Recceived - %s\n",clientSocket,client_message);
+    /*
+    *should be receiving inputs from the client
+    *for data calls from database 
+    */
+    close(clientSocket);
+    pthread_exit(NULL);
+}
+
+void * clientHandler(){
+    printf("Created Client Handler \n");
+    int clientSocket;
+    //Instantiating an array of thread identifiers
+    pthread_t threadID[clientLimit];
+    int i = 0;
+    for(;;){
+
+        //Accept call creates a new socket for the incoming connection
+        addr_size = sizeof serverStorage;
+        clientSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
+
+        //for each client request creates a thread and assign the client request to it to process
+        //so the main thread can entertain next request
+        if( pthread_create(&threadID[i], NULL, clientThread, &clientSocket) != 0 ){
+            printf("Failed to create thread\n");
+            msgBox("Error","Failure to Create Thread");
+        }
+        if( i >= clientLimit)
+        {
+            i = 0;
+            while(i < clientLimit)
+            {
+            pthread_join(threadID[i++],NULL);
+            }
+            i = 0;
+        }
+    }
+}
+
 void toggleServer(GtkToggleButton *toggleBtn){
     gboolean state;
-    int serverSocket, clientSocket;
-    struct sockaddr_in serverAddr;
-    struct sockaddr_storage serverStorage;
-    socklen_t addr_size;
+    const gchar *portN,*clientLimitChar;
+    state = gtk_toggle_button_get_active(toggleBtn);
+    portN = gtk_entry_get_text(portEntry);
+    clientLimitChar = gtk_entry_get_text(clientLimitEntry);
+    port = atoi(portN);
+    clientLimit=atoi(clientLimitChar);
+    printf("%d\n",port);
     if(state){
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Stop Server");
-        printf("asdssssssssss");
+
         //Creating the host socket 
         serverSocket = socket(PF_INET, SOCK_STREAM, 0);
         
@@ -71,44 +121,20 @@ void toggleServer(GtkToggleButton *toggleBtn){
         if(listen(serverSocket,clientLimit)==0){
             printf("Listening\n");
         }else{
-            /*
-            *Implement a popup indicating the user that there is a connection error
-            */
             printf("Error\n");
+            msgBox("Error","Server Error");
+            return;
         }
-        /*
-        *Need to implement a client handler to take care of incoming clients 
-        *while user continues to use application
-        */
 
-        //Instantiating an array of thread identifiers
-        pthread_t threadID[clientLimit];
-        int i = 0;
-        for(;;){
-
-            //Accept call creates a new socket for the incoming connection
-            addr_size = sizeof serverStorage;
-            clientSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
-
-            //for each client request creates a thread and assign the client request to it to process
-            //so the main thread can entertain next request
-            if( pthread_create(&threadID[i], NULL, clientThread, &clientSocket) != 0 )
-                printf("Failed to create thread\n");
-            if( i >= clientLimit)
-            {
-                i = 0;
-                while(i < clientLimit)
-                {
-                pthread_join(threadID[i++],NULL);
-                }
-                i = 0;
-            }
-        }
+        //Creating and joining client handler
+        pthread_t clientHandlerThread;
+        pthread_create(&clientHandlerThread,NULL,clientHandler,NULL);
     }else{
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Start Server");
         //disconnect
     }
 }
+
 
 void on_window_destroy(){
     puts("Program Terminated");
@@ -120,6 +146,7 @@ int main(int argc, char *argv[])
     GtkBuilder *builder;
     GtkCssProvider *cssProvider = gtk_css_provider_new();
     ipAddr = getIpAddr();
+    ipAddr = "127.0.0.1";
     //Taking commandline arguments (if provided)
     gtk_init(&argc, &argv);
     
@@ -146,6 +173,8 @@ int main(int argc, char *argv[])
     portEntry = GTK_WIDGET(gtk_builder_get_object(builder, "portEntry"));
     portEditToggle = GTK_WIDGET(gtk_builder_get_object(builder, "portEditToggle"));
     
+    clientLimitEntry = GTK_WIDGET(gtk_builder_get_object(builder, "clientLimitEntry"));
+
     toggleServerBtn = GTK_WIDGET(gtk_builder_get_object(builder, "toggleServerBtn"));
     lblServerToggle = GTK_WIDGET(gtk_builder_get_object(builder, "lblServerToggle"));
 
