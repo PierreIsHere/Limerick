@@ -15,6 +15,7 @@ socklen_t addr_size;
 
 GtkWidget *mainWindow,*mainStack;
 GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry,*clientLimitEntry;
+GtkWidget *keyEntry,*keyEditToggle;
 GtkWidget *toggleServerBtn,*lblServerToggle;
 
 char* getIpAddr() { 
@@ -47,12 +48,29 @@ void portEditToggled(){
     }
 }
 
+void keyEditToggled(){
+    gboolean state;
+    state = gtk_toggle_button_get_active(keyEditToggle);
+    if(state){
+        gtk_widget_set_sensitive(keyEntry,TRUE);
+    }else{
+        gtk_widget_set_sensitive(keyEntry,FALSE);
+    }
+}
+
 void * clientThread(void *arg)
 {
     int clientSocket = *((int *)arg);
     char client_message[2000];
+    char clientName[2000];
+    char clientServerKey[2000];
+
     recv(clientSocket , client_message , 2000 , 0);
-    printf("Connected to - %d Recceived - %s\n",clientSocket,client_message);
+    recv(clientSocket , clientName , 2000 , 0);
+    recv(clientSocket , clientServerKey , 2000 , 0);
+
+
+    printf("Connected to - %s Recceived - %s\n",clientName,client_message);
     /*
     *should be receiving inputs from the client
     *for data calls from database 
@@ -188,5 +206,3 @@ int main(int argc, char *argv[])
     gtk_main();
     return 0;
 }
-
-

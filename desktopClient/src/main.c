@@ -17,9 +17,8 @@ int port, sock=0;
 
 GtkWidget *mainWindow,*mainStack;
 GtkWidget *serverPage,*ipAddrBox,*portNum;
-GtkWidget *loginPage,*userName,*userPass;
-GtkWidget *signupPage;
-GtkWidget *passRecovPage;
+GtkWidget *loginPage,*displayName,*clientServerKey,*clinetSubmitBtn,*lbl_login;
+
 
 void *input(){
     char inp[200];
@@ -40,13 +39,20 @@ void *output(){
     pthread_exit(NULL);
 }
 
-void msgBox(char*header,char*message) {
+void msgBox(char*header,char*message){
     
   GtkWidget *dialog;
   dialog = gtk_message_dialog_new(GTK_WINDOW(mainWindow), GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,message);
   gtk_window_set_title(GTK_WINDOW(dialog),header);
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
+}
+
+void loginServer(){
+    const gchar *dispName =  gtk_entry_get_text(displayName);
+    const gchar *serverKey = gtk_entry_get_text(clientServerKey);
+    send((long)sock,displayName,strlen(displayName),0); 
+    send((long)sock,serverKey,strlen(serverKey),0); 
 }
 
 int submitServer(){
@@ -90,19 +96,9 @@ int submitServer(){
     gtk_stack_set_visible_child (GTK_STACK(mainStack),loginPage);
     
 }
-void login(){
-    const gchar *uName,*uPass;
-    uName = gtk_entry_get_text(userName);
-    uPass = gtk_entry_get_text(userPass);
-}
+
 void goto_loginPage(){
     gtk_stack_set_visible_child (GTK_STACK(mainStack),loginPage);
-}
-void goto_signupPage(){
-    gtk_stack_set_visible_child (GTK_STACK(mainStack),signupPage);
-}
-void goto_recovPage(){
-    gtk_stack_set_visible_child (GTK_STACK(mainStack),passRecovPage);    
 }
 
 void on_window_destroy(){
@@ -126,10 +122,9 @@ int main(int argc, char *argv[])
     portNum = GTK_WIDGET(gtk_builder_get_object(builder, "portNum"));
 
     loginPage = GTK_WIDGET(gtk_builder_get_object(builder, "loginPage"));
-
-    signupPage = GTK_WIDGET(gtk_builder_get_object(builder, "signupPage"));
-
-    passRecovPage = GTK_WIDGET(gtk_builder_get_object(builder, "passRecovPage"));
+    displayName = GTK_WIDGET(gtk_builder_get_object(builder, "displayName"));
+    clientServerKey = GTK_WIDGET(gtk_builder_get_object(builder, "clientServerKey"));
+    lbl_login = GTK_WIDGET(gtk_builder_get_object(builder, "lbl_login"));
 
     gtk_builder_connect_signals(builder, NULL);
 
