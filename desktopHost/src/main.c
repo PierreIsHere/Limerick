@@ -3,21 +3,25 @@ Author: Azfar C.
 FileName: main.c
 Purpose: Desktop host for the limerick ftp/server program
 */
-#include"libs.h"
+#include "libs.h"
 
 int clientLimit, port;
 const char *ipAddr;
+char *serverKey;
 
+//socket variable initialization
 int serverSocket;
 struct sockaddr_in serverAddr;
 struct sockaddr_storage serverStorage;
 socklen_t addr_size;
 
+//Initialization of gtk objects
 GtkWidget *mainWindow,*mainStack;
 GtkWidget *mainPage,*portEditToggle,*portEntry,*ipAddrEntry,*clientLimitEntry;
 GtkWidget *keyEntry,*keyEditToggle;
 GtkWidget *toggleServerBtn,*lblServerToggle;
 
+//Gets the ip address of the server machine
 char* getIpAddr() { 
     int fd;
     struct ifreq ifr;
@@ -28,7 +32,26 @@ char* getIpAddr() {
     close(fd);
     return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
+//Random string generator for server key
+char *randstring(int length) {
 
+    static char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";        
+    char *randomString = NULL;
+
+    if (length) {
+        randomString = malloc(sizeof(char) * (length +1));
+
+        if (randomString) {            
+            for (int n = 0;n < length;n++) {            
+                int key = rand() % (int)(sizeof(charset) -1);
+                randomString[n] = charset[key];
+            }
+            randomString[length] = '\0';
+        }
+    }
+    return randomString;
+}
+//Generates a gtk popup box for error messages
 void msgBox(char*header,char*message) {
     
   GtkWidget *dialog;
@@ -37,8 +60,8 @@ void msgBox(char*header,char*message) {
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
 }
-
-void portEditToggled(){
+//toggles if the port entry box is edittable or not
+void portEditToggled( ){
     gboolean state;
     state = gtk_toggle_button_get_active(portEditToggle);
     if(state){
@@ -47,8 +70,8 @@ void portEditToggled(){
         gtk_widget_set_sensitive(portEntry,FALSE);
     }
 }
-
-void keyEditToggled(){
+//toggles if the key entry box is edittable or not
+void keyEditToggled(GtkToggleButton *keyEditToggle){
     gboolean state;
     state = gtk_toggle_button_get_active(keyEditToggle);
     if(state){
@@ -57,28 +80,32 @@ void keyEditToggled(){
         gtk_widget_set_sensitive(keyEntry,FALSE);
     }
 }
-
+//Thread for each client 
 void * clientThread(void *arg)
 {
-    int clientSocket = *((int *)arg);
-    char client_message[2000];
-    char clientName[2000];
-    char clientServerKey[2000];
+    int clientSocket = *((int *)arg),keyLen,valid=0;
+    char clientName[200], clientServerKey[200], clientKeyLength[20],msg[20];
 
-    recv(clientSocket , client_message , 2000 , 0);
-    recv(clientSocket , clientName , 2000 , 0);
-    recv(clientSocket , clientServerKey , 2000 , 0);
+    recv(clientSocket , clientName , 200 , 0);
+    //Continue to request for server key from client until correct one is provided
+    while(valid == 0){
+    recv(clientSocket , clientServerKey , 200 , 0);
+    puts(clientServerKey);
+    msg[0] = '0';
+    //if the server key is the same as the clients attemp grant access to server
+    if(strcmp(clientServerKey,serverKey)==0){
+        valid = 1;   
+        printf("Connected to - %s Received - %s\n",clientName,clientServerKey);
+        msg[0]='1';
+    }
+    puts(msg);
+    send(clientSocket,msg,20,0);
+    }
 
-
-    printf("Connected to - %s Recceived - %s\n",clientName,client_message);
-    /*
-    *should be receiving inputs from the client
-    *for data calls from database 
-    */
     close(clientSocket);
     pthread_exit(NULL);
 }
-
+//Handles incoming clients seperate thread as to allow functionality while handler is running
 void * clientHandler(){
     printf("Created Client Handler \n");
     int clientSocket;
@@ -86,7 +113,7 @@ void * clientHandler(){
     pthread_t threadID[clientLimit];
     int i = 0;
     for(;;){
-
+        
         //Accept call creates a new socket for the incoming connection
         addr_size = sizeof serverStorage;
         clientSocket = accept(serverSocket, (struct sockaddr *) &serverStorage, &addr_size);
@@ -97,6 +124,7 @@ void * clientHandler(){
             printf("Failed to create thread\n");
             msgBox("Error","Failure to Create Thread");
         }
+        //allows the inputed number of clients
         if( i >= clientLimit)
         {
             i = 0;
@@ -108,7 +136,7 @@ void * clientHandler(){
         }
     }
 }
-
+//toggles server on
 void toggleServer(GtkToggleButton *toggleBtn){
     gboolean state;
     const gchar *portN,*clientLimitChar;
@@ -121,6 +149,8 @@ void toggleServer(GtkToggleButton *toggleBtn){
     if(state){
         gtk_label_set_text(GTK_LABEL(lblServerToggle),"Stop Server");
 
+        serverKey =  gtk_entry_get_text(keyEntry);
+        printf("%s\n",serverKey);
         //Creating the host socket 
         serverSocket = socket(PF_INET, SOCK_STREAM, 0);
         
@@ -135,7 +165,7 @@ void toggleServer(GtkToggleButton *toggleBtn){
         //Combining socket with supplied information
         bind(serverSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
 
-        //Setting the socket to listen with a clientLimit amount of connections qeued 
+        //Setting the socket to listen with a client limit amount of connections qeued 
         if(listen(serverSocket,clientLimit)==0){
             printf("Listening\n");
         }else{
@@ -153,7 +183,7 @@ void toggleServer(GtkToggleButton *toggleBtn){
     }
 }
 
-
+//ends the gui/program
 void on_window_destroy(){
     puts("Program Terminated");
     gtk_main_quit();
@@ -193,6 +223,8 @@ int main(int argc, char *argv[])
     
     clientLimitEntry = GTK_WIDGET(gtk_builder_get_object(builder, "clientLimitEntry"));
 
+    keyEntry = GTK_WIDGET(gtk_builder_get_object(builder, "keyEntry"));
+    gtk_entry_set_text(GTK_ENTRY(keyEntry),randstring(10));
     toggleServerBtn = GTK_WIDGET(gtk_builder_get_object(builder, "toggleServerBtn"));
     lblServerToggle = GTK_WIDGET(gtk_builder_get_object(builder, "lblServerToggle"));
 
